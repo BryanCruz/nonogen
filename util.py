@@ -2,7 +2,7 @@ import nonogram
 
 def printSol(sol, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
-    print(nonogram.Game(nLines,  nColumns, sol))
+    print(nonogram.Game(nLines,  nColumns, sol.points))
 
 def readRulesFile(fileName):
     with open(fileName) as rulesFile:
@@ -171,31 +171,7 @@ def fitnessInEdgesAgain(sol, constraints):
                 break
 
             ruleIndex += 1
-            count     += 1
-
-    # Count in lines in descending order
-    for lineIndex in reversed(range(nLines)):
-        rulesQtt = len(rules.lines[lineIndex])
-
-        columnIndex = nColumns-1
-        ruleIndex   = rulesQtt-1
-
-        while columnIndex >= 0 and ruleIndex >= 0:
-            countSegment = 0
-
-            while columnIndex >= 0 and not board[lineIndex][columnIndex]:
-                    columnIndex -= 1
-
-            while columnIndex >= 0 and board[lineIndex][columnIndex]:
-                countSegment += 1
-                columnIndex -= 1
-
-            currRule = rules.lines[lineIndex][ruleIndex]
-            if countSegment != currRule:
-                break
-
-            ruleIndex -= 1
-            count     += 1
+            count     += currRule
 
     # Count in columns in ascending order
     for columnIndex in range(nColumns):
@@ -219,32 +195,7 @@ def fitnessInEdgesAgain(sol, constraints):
                 break
 
             ruleIndex += 1
-            count     += 1
-
-
-    # Count in columns in descending order
-    for columnIndex in reversed(range(nColumns)):
-        rulesQtt = len(rules.columns[columnIndex])
-
-        lineIndex = nLines-1
-        ruleIndex = rulesQtt-1
-
-        while lineIndex >= 0 and ruleIndex >= 0:
-            countSegment = 0
-
-            while lineIndex >= 0 and not board[lineIndex][columnIndex]:
-                    lineIndex -= 1
-
-            while lineIndex >= 0 and board[lineIndex][columnIndex]:
-                countSegment += 1
-                lineIndex    -= 1
-
-            currRule = rules.columns[columnIndex][ruleIndex]
-            if countSegment != currRule:
-                break
-
-            ruleIndex -= 1
-            count     += 1
+            count     += currRule
 
     return count
 
