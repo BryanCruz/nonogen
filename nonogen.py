@@ -16,7 +16,9 @@ def main(puzzleName = 'i20902', nPopulation = 1000):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
 
     mySol = GA(constraints)
+    print(checkSolution(Game(nLines, nColumns, mySol.points), rules))
     printSol(mySol, constraints)
+
 
 def GA(constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
@@ -26,12 +28,13 @@ def GA(constraints):
         PP  = crossover(P, constraints)
         PPP = mutation(PP, constraints)
         P   = select(P, PPP, constraints)
+        print(P[0])
         print(P[0].fitness)
         printSol(P[0], constraints)
-       # print(len(P[0]))
-  #      print(Game(nLines, nColumns, P[1]))
-   #     print(Game(nLines, nColumns, P[2]))
-    #    print(Game(nLines, nColumns, P[3]))
+        printSol(P[1], constraints)
+        printSol(P[2], constraints)
+        printSol(P[500], constraints)
+        printSol(P[999], constraints)
 
     return best(P)
 
@@ -63,13 +66,16 @@ def crossover(P, constraints):
     PP    = []
     count = 0
 
+    P      = sorted(P, key = lambda s: s.fitness, reverse=True)
+    weights=[i for i in range(nPopulation, 0, -1)]
+
     while count < nPopulation:
         childPoints = []
         while len(set(childPoints)) != nPoints:
-            parent1 = P[random.randint(0, nPopulation-1)]
-            parent2 = parent1
-            while parent2 == parent1:
-                parent2 = P[random.randint(0, nPopulation-1)]
+            parent1 = 0
+            parent2 = 0
+            while parent1 == parent2:
+                parent1, parent2 = random.choices(P, weights=weights, k=2)
 
             r = random.randint(1, nPoints-2)
             childPoints = sortedPoints(parent1.points[:r] + parent2.points[r:])
