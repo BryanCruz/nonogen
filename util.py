@@ -54,18 +54,22 @@ def fitnessInEdgesAgain(sol, constraints):
             countSegment = 0
 
             while columnIndex < nColumns and not board[lineIndex][columnIndex]:
-                    columnIndex += 1
+                columnIndex += 1
 
             while columnIndex < nColumns and board[lineIndex][columnIndex]:
                 countSegment += 1
                 columnIndex += 1
 
-            currRule = -1
-            while ruleIndex < rulesQtt and rules.lines[lineIndex][ruleIndex]:
-                ruleIndex += rules.lines[lineIndex][ruleIndex]
+            while ruleIndex < rulesQtt and countSegment != rules.lines[lineIndex][ruleIndex]:
+                count -= rules.lines[lineIndex][ruleIndex]
+                ruleIndex += 1
 
-            if countSegment == currRule:
-                count += 1
+            if ruleIndex < rulesQtt and countSegment == rules.lines[lineIndex][ruleIndex]:
+                ruleIndex += 1
+
+        while ruleIndex < rulesQtt:
+            count -= rules.lines[lineIndex][ruleIndex]
+            ruleIndex += 1
 
     # Count in columns in ascending order
     for columnIndex in range(nColumns):
@@ -78,16 +82,77 @@ def fitnessInEdgesAgain(sol, constraints):
             countSegment = 0
 
             while lineIndex < nLines and not board[lineIndex][columnIndex]:
-                    lineIndex += 1
+                lineIndex += 1
 
             while lineIndex < nLines and board[lineIndex][columnIndex]:
                 countSegment += 1
                 lineIndex    += 1
 
             while ruleIndex < rulesQtt and rules.columns[columnIndex][ruleIndex] != countSegment:
+                count -= rules.columns[columnIndex][ruleIndex]
                 ruleIndex += 1
 
             if ruleIndex < rulesQtt and rules.columns[columnIndex][ruleIndex] == countSegment:
-                count += rules.columns[columnIndex][ruleIndex]
+                ruleIndex += 1
+
+        while ruleIndex < rulesQtt:
+            count -= rules.columns[columnIndex][ruleIndex]
+            ruleIndex +=1
+
+    # Count in lines in descending order
+    for lineIndex in range(nLines-1, -1, -1):
+        rulesQtt = len(rules.lines[lineIndex])
+
+        columnIndex = nColumns-1
+        ruleIndex   = rulesQtt-1
+
+        while columnIndex >= 0 and ruleIndex >= 0:
+            countSegment = 0
+
+            while columnIndex >= 0 and not board[lineIndex][columnIndex]:
+                columnIndex -= 1
+
+            while columnIndex >= nColumns and board[lineIndex][columnIndex]:
+                countSegment += 1
+                columnIndex -= 1
+
+            while ruleIndex >= 0 and countSegment != rules.lines[lineIndex][ruleIndex]:
+                count     -= rules.lines[lineIndex][ruleIndex]
+                ruleIndex -= 1
+
+            if ruleIndex >= 0 and countSegment == rules.lines[lineIndex][ruleIndex]:
+                ruleIndex -= 1
+
+        while ruleIndex >= 0:
+            ruleIndex-=rules.lines[lineIndex][ruleIndex]
+            count-=1
+
+    # Count in columns in descending order
+    for columnIndex in range(nColumns-1, -1, -1):
+        rulesQtt = len(rules.columns[columnIndex])
+
+        lineIndex = nLines-1
+        ruleIndex = rulesQtt-1
+
+        while lineIndex >= 0 and ruleIndex < rulesQtt:
+            countSegment = 0
+
+            while lineIndex >= 0 and not board[lineIndex][columnIndex]:
+                    lineIndex -= 1
+
+            while lineIndex >= 0 and board[lineIndex][columnIndex]:
+                countSegment += 1
+                lineIndex    -= 1
+
+            while ruleIndex >= 0 and rules.columns[columnIndex][ruleIndex] != countSegment:
+                count     -= rules.columns[columnIndex][ruleIndex]
+                ruleIndex -= 1
+
+            if ruleIndex >= 0 and rules.columns[columnIndex][ruleIndex] == countSegment:
+                ruleIndex -= 1
+
+        while ruleIndex >= 0:
+            ruleIndex -= rules.columns[columnIndex][ruleIndex]
+            count -= 1
 
     return count
