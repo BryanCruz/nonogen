@@ -60,16 +60,12 @@ def fitnessInEdgesAgain(sol, constraints):
                 countSegment += 1
                 columnIndex += 1
 
-            currRule = rules.lines[lineIndex][ruleIndex]
-            if countSegment == currRule:
-                ruleIndex += 1
-            else:
-                count -= countSegment
+            currRule = -1
+            while ruleIndex < rulesQtt and rules.lines[lineIndex][ruleIndex]:
+                ruleIndex += rules.lines[lineIndex][ruleIndex]
 
-        while columnIndex < nColumns:
-            if board[lineIndex][columnIndex]:
-                count   -= 1
-            columnIndex += 1
+            if countSegment == currRule:
+                count += 1
 
     # Count in columns in ascending order
     for columnIndex in range(nColumns):
@@ -88,15 +84,10 @@ def fitnessInEdgesAgain(sol, constraints):
                 countSegment += 1
                 lineIndex    += 1
 
-            currRule = rules.columns[columnIndex][ruleIndex]
-            if countSegment == currRule:
+            while ruleIndex < rulesQtt and rules.columns[columnIndex][ruleIndex] != countSegment:
                 ruleIndex += 1
-            else:
-                count -= countSegment
 
-        while lineIndex < nLines:
-            if board[lineIndex][columnIndex]:
-                count   -= 1
-            lineIndex += 1
+            if ruleIndex < rulesQtt and rules.columns[columnIndex][ruleIndex] == countSegment:
+                count += rules.columns[columnIndex][ruleIndex]
 
     return count

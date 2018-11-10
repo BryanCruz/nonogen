@@ -7,7 +7,7 @@ from util     import readRulesFile, printSol, createConstraints, fitnessInEdgesA
 
 class Solution:
     def __init__(self, points, constraints):
-        self.points  = points
+        self.points  = sortedPoints(points)
         self.fitness = evaluateFitness(points, constraints)
 
 def main(puzzleName = 'i20902', nPopulation = 1000):
@@ -31,15 +31,15 @@ def GA(constraints):
         print(P[0])
         print(P[0].fitness)
         printSol(P[0], constraints)
-        printSol(P[1], constraints)
-        printSol(P[2], constraints)
-        printSol(P[500], constraints)
+        # printSol(P[1], constraints)
+        # printSol(P[2], constraints)
+        # printSol(P[500], constraints)
         printSol(P[999], constraints)
 
     return best(P)
 
 def sortedPoints(points):
-    return sorted(points, key = lambda p : (p[0]+p[1], p[0], p[1]))
+    return sorted(points, key = lambda p : (p[0]+p[1]))
 
 def randomSolutions(constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
@@ -49,7 +49,7 @@ def randomSolutions(constraints):
 
     for _ in range(nPopulation):
         random.shuffle(allPoints)
-        points     = sortedPoints(allPoints[:nPoints])
+        points     = allPoints[:nPoints]
         solutions += [Solution(points, constraints)]
 
     return solutions
@@ -77,8 +77,8 @@ def crossover(P, constraints):
             while parent1 == parent2:
                 parent1, parent2 = random.choices(P, weights=weights, k=2)
 
-            r = random.randint(1, nPoints-2)
-            childPoints = sortedPoints(parent1.points[:r] + parent2.points[r:])
+            r = random.randint(0, nPoints-1)
+            childPoints = parent1.points[:r] + parent2.points[r:]
         PP    += [Solution(childPoints, constraints)]
         count += 1
 
