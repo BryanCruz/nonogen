@@ -10,9 +10,14 @@ class Solution:
     def __init__(self, points, constraints):
         self.points  = points
         self.fitness = evaluateFitness(points, constraints)
-#i20902
-#i21128
-def main(puzzleName = 'i21128', nPopulation = 500):
+# i21021
+# i21128
+# i20902
+# i20941
+# i21303
+# i1118
+
+def main(puzzleName = 'i20941', nPopulation = 2500):
     rules       = readRulesFile('puzzles/' + puzzleName + '.txt')
     constraints = createConstraints(rules, nPopulation)
     rules, nLines, nColumns, nPoints, nPopulation = constraints
@@ -28,16 +33,18 @@ def GA(constraints):
     P = randomSolutions(constraints)
     while not converge(P, constraints):
         PP  = crossoverRandomBoard(P, constraints)
-        PPP = mutationInLine(PP, constraints)
+        PPP = mutationInLineN(PP, constraints)
         P   = selectBestChildren(P, PPP, constraints)
 
-        print(P[0].fitness)
         global iterations
         iterations += 1
-        print(iterations)
-        printSol(P[0], constraints)
+
         print(P[nPopulation-1].fitness)
         printSol(P[nPopulation-1], constraints)
+
+        print(iterations)
+        print(P[0].fitness)
+        printSol(P[0], constraints)
 
     return best(P, constraints)
 
@@ -51,6 +58,7 @@ def randomSolutions(constraints):
     for _ in range(nPopulation):
         random.shuffle(allPoints)
         r = random.randint(0,nLines*nColumns+1)
+        r = nPoints
         points     = allPoints[:r]
         solutions += [Solution(points, constraints)]
 
@@ -221,7 +229,7 @@ def mutation(P, constraints):
 
     for sol in P:
         # mutate with a prob of p
-        p = 0.35
+        p = 0.25
         if random.random() > p:
             PP += [sol]
             continue
@@ -245,7 +253,7 @@ def mutationRandom(P, constraints):
 
     for sol in P:
         # mutate with a prob of p
-        p = 0.15
+        p = 0.25
         if random.random() > p:
             PP += [sol]
             continue
@@ -308,7 +316,7 @@ def mutationFlipRandomN(P, constraints):
 
     for sol in P:
         # mutate with a prob of p
-        p = 0.1
+        p = 0.25
         if random.random() > p:
             PP += [sol]
             continue
@@ -341,8 +349,8 @@ def mutationInLine(P, constraints):
 
     for sol in P:
         # mutate with a prob of p
-        p = 0.25
-        if random.random() > p:
+        p = 0.35
+        if random.random() > p or len(sol.points) == 0:
             PP += [sol]
             continue
 
@@ -357,6 +365,56 @@ def mutationInLine(P, constraints):
             newPoint = (random.randint(0,nLines), newPoint[1])
 
         newPoints += [newPoint]
+
+        PP += [Solution(newPoints, constraints)]
+
+    return PP
+
+def mutationInLineN(P, constraints):
+    rules, nLines, nColumns, nPoints, nPopulation = constraints
+    boardSize = nLines*nColumns
+
+    PP = []
+
+    for sol in P:
+        # mutate with a prob of p
+        p = 0.25
+        if random.random() > p or len(sol.points) < 0:
+            PP += [sol]
+            continue
+
+        n = random.randint(1, int(/10))
+
+        newPoints = sol.points
+        for _ in range(n):
+            newPoint = None
+            if random.random() <= 0.66:
+                if len(newPoints) < 1:
+                    continue
+
+                newPoint = newPoints.pop(random.randint(len(newPoints)))
+
+                if random.random() <= 0.5:
+                    continue
+
+                moveInLine = random.random()
+                if moveInLine <= 0.5:
+                    newPoint = (newPoint[0], random.randint(nColumns))
+                    while newPoint in newPoints:
+                        newPoint = (newPoint[0], random.randint(nColumns))
+
+                else:
+                    newPoint = (random.randint(nLines), newPoint[1])
+                    while newPoint in newPoints:
+                        newPoint = (random.randint(nLines), newPoint[1])
+            else:
+                if len(newPoints) == nLines*nColumns:
+                    continue
+                newPoint = (random.randint(nLines), random.randint(nColumns))
+                while newPoint in newPoints:
+                    newPoint = (random.randint(nLines), random.randint(nColumns))
+
+            newPoints += [newPoint]
 
         PP += [Solution(newPoints, constraints)]
 
@@ -476,7 +534,7 @@ def selectBestChildren(P, PP, constraints):
 
     PP = sorted(PP, key = lambda s : (s.fitness, random.random()), reverse = True)
 
-    nChildren = int(nPopulation/2)+1
+    nChildren = int(2*nPopulation/3)+1
     nRandom = nPopulation - nChildren
 
     bestOnes = PP[:nChildren]
@@ -487,6 +545,23 @@ def selectBestChildren(P, PP, constraints):
     bestN = bestOnes + np.ndarray.tolist(random.choice(others, p=[i/nOthers for i in range(sizeOthers, 0, -1)], size=nRandom, replace=False))
 
     return bestN
+
+
+def selectYinYang(P, PP, constraints):
+    rules, nLines, nColumns, nPoints, nPopulation = constraints
+
+    PP = sorted(PP, key = lambda s : (s.fitness, random.random()))
+
+    nChildren = int(3*nPopulation/4)+1
+    nRandom = nPopulation - nChildren
+
+    bestOnes  = PP[-nChildren:]
+    worstOnes = PP[:nRandom]
+
+    bestN = bestOnes + worstOnes
+
+    return bestN
+
 
 def selectBestOfAll(P, PP, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
