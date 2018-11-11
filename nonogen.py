@@ -1,6 +1,6 @@
 import random
 from nonogram import Game, Rules, checkSolution
-from util     import readRulesFile, printSol, createConstraints, fitnessInEdgesAgain as evaluateFitness
+from util     import readRulesFile, printSol, createConstraints, fitnessMatch as evaluateFitness
 
 # points = [(x, y), ...] => Filled squares in nonogram
 # constraints = (rules, nLines, nColumns, nPoints, nPopulation)
@@ -10,7 +10,7 @@ class Solution:
         self.points  = sortedPoints(points)
         self.fitness = evaluateFitness(points, constraints)
 
-def main(puzzleName = 'i20902', nPopulation = 1000):
+def main(puzzleName = 'i20902', nPopulation = 500):
     rules       = readRulesFile('puzzles/' + puzzleName + '.txt')
     constraints = createConstraints(rules, nPopulation)
     rules, nLines, nColumns, nPoints, nPopulation = constraints
@@ -19,22 +19,21 @@ def main(puzzleName = 'i20902', nPopulation = 1000):
     print(checkSolution(Game(nLines, nColumns, mySol.points), rules))
     printSol(mySol, constraints)
 
-
 def GA(constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
 
     P = randomSolutions(constraints)
     while not converge(P, constraints):
-        PP  = crossover(P, constraints)
-        PPP = mutationLine(PP, constraints)
+        PP  = crossoverTest(P, constraints)
+        PPP = mutation(PP, constraints)
         P   = select(P, PPP, constraints)
-        print(P[0])
         print(P[0].fitness)
         printSol(P[0], constraints)
 
     return best(P)
 
 def sortedPoints(points):
+    return points
     return sorted(points, key = lambda p : (p[0]+p[1], p[0], p[1]))
 
 def sortedSolutions(P):
@@ -84,6 +83,60 @@ def crossover(P, constraints):
 
     return PP
 
+def crossoverTest(P, constraints):
+    rules, nLines, nColumns, nPoints, nPopulation = constraints
+
+    PP    = []
+    count = 0
+
+    P      = sortedSolutions(P)
+    weights=[i for i in range(1, nPopulation+1)]
+
+    while count < nPopulation:
+        childPoints = []
+
+        parent1 = 0
+        parent2 = 0
+        while parent1 == parent2:
+            parent1, parent2 = random.choices(P, weights=weights, k=2)
+
+            r = random.randint(0, nPoints)
+            child1Points = parent1.points[r:] + parent2.points[:r]
+            child2Points = parent1.points[:r] + parent2.points[r:]
+
+        PP    += [Solution(child1Points, constraints), Solution(child2Points, constraints)]
+        count += 1
+
+    return PP
+
+
+def crossover(P, constraints):
+    rules, nLines, nColumns, nPoints, nPopulation = constraints
+
+    PP    = []
+    count = 0
+
+    P      = sortedSolutions(P)
+    weights=[i for i in range(1, nPopulation+1)]
+
+    while count < nPopulation:
+        childPoints = []
+
+        # while len(set(childPoints)) != nPoints or len(set(childPoints)) != nPoints:
+        parent1 = 0
+        parent2 = 0
+        while parent1 == parent2:
+            parent1, parent2 = random.choices(P, weights=weights, k=2)
+
+        r = random.randint(0, nPoints-1)
+        child1Points = parent1.points[:r] + parent2.points[r:]
+        child2Points = parent1.points[r:] + parent2.points[:r]
+
+        PP    += [Solution(child1Points, constraints), Solution(child2Points, constraints)]
+        count += 1
+
+    return PP
+
 def mutation(P, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
 
@@ -91,7 +144,7 @@ def mutation(P, constraints):
 
     for sol in P:
         # mutate with a prob of p
-        p = 0.75
+        p = 0.8
         mutate = random.random()
         if mutate < p:
             # PP += [sol]
@@ -141,7 +194,7 @@ def mutationLine(P, constraints):
 
         oldPoints = [p for p in sol.points if p[1] != columnIndex]
         oldColumn = [p for p in sol.points if p[1] == columnIndex]
-        
+
         newPoints = []
         while len(newPoints) != len(oldColumn):
             newPoint = (random.randint(0,nLines-1), columnIndex)
@@ -155,8 +208,10 @@ def mutationLine(P, constraints):
 def select(P, PP, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
 
-    PPP    = P + PP
-    bestN  = sortedSolutions(PPP)[-nPopulation:]
+    PPP = P+PP
+    offset = 1-min(PPP, key = lambda s : s.fitness).fitness
+
+    bestN  = random.choices(PPP, weights=[(s.fitness+offset) for s in PPP], k=nPopulation)
     return bestN
 
 def best(P):
