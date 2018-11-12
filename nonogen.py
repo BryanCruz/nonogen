@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import random
 from nonogram import Game, Rules, checkSolution
-from util     import readRulesFile, printSol, createConstraints, fitnessMatchWithoutEdges as evaluateFitness
+from util     import readRulesFile, printSol, createConstraints, fitnessMatchWithoutEdgesE as evaluateFitness
 
 # points = [(x, y), ...] => Filled squares in nonogram
 # constraints = (rules, nLines, nColumns, nPoints, nPopulation)
@@ -17,7 +17,7 @@ class Solution:
 # i21303
 # i1118
 
-def main(puzzleName = 'i20941', nPopulation = 2500):
+def main(puzzleName = 'i21303', nPopulation = 2000):
     rules       = readRulesFile('puzzles/' + puzzleName + '.txt')
     constraints = createConstraints(rules, nPopulation)
     rules, nLines, nColumns, nPoints, nPopulation = constraints
@@ -34,7 +34,7 @@ def GA(constraints):
     while not converge(P, constraints):
         PP  = crossoverRandomBoard(P, constraints)
         PPP = mutationInLineN(PP, constraints)
-        P   = selectBestChildren(P, PPP, constraints)
+        P   = selectBestOfAll(P, PPP, constraints)
 
         global iterations
         iterations += 1
@@ -64,28 +64,6 @@ def randomSolutions(constraints):
 
     return solutions
 
-def crossover(P, constraints):
-    rules, nLines, nColumns, nPoints, nPopulation = constraints
-
-    PP    = []
-    count = 0
-
-    P      = sorted(P, key = lambda s : (s.fitness, random.random()))
-    n = (nPopulation*(nPopulation+1))/2
-    prob=[i/n for i in range(1, nPopulation+1)]
-
-    while count < nPopulation:
-        childPoints = []
-        while len(set(childPoints)) != nPoints:
-            parent1, parent2 = random.choice(P, p=prob, replace=False, size=2)
-
-            r = random.randint(0, nPoints)
-            childPoints = parent1.points[:r] + parent2.points[r:]
-        PP    += [Solution(childPoints, constraints)]
-        count += 1
-
-    return PP
-
 def crossoverRandomBoard(P, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
 
@@ -99,8 +77,7 @@ def crossoverRandomBoard(P, constraints):
     while count < nPopulation:
         child1Points = []
         child2Points = []
-        # parent1, parent2 = random.choice(P, p=prob, replace=False, size=2)
-        parent1, parent2 = random.choice(P, replace=False, size=2)
+        parent1, parent2 = random.choice(P, p=prob, replace=False, size=2)
 
         if random.random() <= 0.5: # cut vertical
             r = random.randint(0, nColumns+1)
@@ -117,110 +94,6 @@ def crossoverRandomBoard(P, constraints):
         count += 1
 
     return PP
-
-def crossoverHalfBoard(P, constraints):
-    rules, nLines, nColumns, nPoints, nPopulation = constraints
-
-    PP    = []
-    count = 0
-
-    P      = sorted(P, key = lambda s : (s.fitness, random.random()))
-    n = (nPopulation*(nPopulation+1))/2
-    prob=[i/n for i in range(1, nPopulation+1)]
-
-    while count < nPopulation:
-        child1Points = []
-        child2Points = []
-        parent1, parent2 = random.choice(P, p=prob, replace=False, size=2)
-
-        if random.random() <= 0.5: # cut vertical
-            r = nColumns/2
-
-            child1Points = [p for p in parent1.points if p[1] < r]+[p for p in parent2.points if p[1] >= r]
-            child2Points = [p for p in parent2.points if p[1] < r]+[p for p in parent1.points if p[1] >= r]
-        else: # cut horizontal
-            r = nLines/2
-
-            child1Points = [p for p in parent1.points if p[0] < r]+[p for p in parent2.points if p[0] >= r]
-            child2Points = [p for p in parent2.points if p[0] < r]+[p for p in parent1.points if p[0] >= r]
-
-        PP    += [Solution(child1Points, constraints), Solution(child2Points, constraints)]
-        count += 1
-
-    return PP
-
-
-def crossoverRandomBoard2(P, constraints):
-    rules, nLines, nColumns, nPoints, nPopulation = constraints
-
-    PP    = []
-    count = 0
-
-    P      = sorted(P, key = lambda s : (s.fitness, random.random()))
-    n = (nPopulation*(nPopulation+1))/2
-    prob=[i/n for i in range(1, nPopulation+1)]
-
-    while count < 2*nPopulation:
-        child1Points = []
-        child2Points = []
-        parent1, parent2 = random.choice(P, p=prob, replace=False, size=2)
-
-        c = random.randint(1, nColumns)
-        l = random.randint(1, nLines)
-
-        child1Points = [p for p in parent1.points if p[0] < l and p[1] < c]+[p for p in parent2.points if p[0] >= l or p[1] >= c]
-        child2Points = [p for p in parent2.points if p[0] < l and p[1] < c]+[p for p in parent1.points if p[0] >= l or p[1] >= c]
-
-        PP    += [Solution(child1Points, constraints), Solution(child2Points, constraints)]
-        count += 1
-
-    return PP
-
-def crossoverRandomBoard4(P, constraints):
-    rules, nLines, nColumns, nPoints, nPopulation = constraints
-
-    PP    = []
-    count = 0
-
-    P      = sorted(P, key = lambda s : (s.fitness, random.random()))
-    n = (nPopulation*(nPopulation+1))/2
-    prob=[i/n for i in range(1, nPopulation+1)]
-
-    while count < 2*nPopulation:
-        parent1, parent2, parent3, parent4 = random.choice(P, p=prob, replace=False, size=4)
-
-        c = random.randint(1, nColumns)
-        l = random.randint(1, nLines)
-
-        child1Points = [p for p in parent1.points if p[0] < l and p[1] < c]+[p for p in parent2.points if p[0] >= l and p[1] >= c] + [p for p in parent3.points if p[0] >= l and p[1] < c] + [p for p in parent4.points if p[0] < l and p[1] >= c]
-
-        PP    += [Solution(child1Points, constraints)]
-        count += 1
-
-    return PP
-
-def crossoverRandom(P, constraints):
-    rules, nLines, nColumns, nPoints, nPopulation = constraints
-
-    PP    = []
-    count = 0
-
-    P      = sorted(P, key = lambda s : (s.fitness, random.random()))
-    n = (nPopulation*(nPopulation+1))/2
-    prob=[i/n for i in range(1, nPopulation+1)]
-
-    while count < nPopulation:
-        childPoints = []
-        parent1, parent2 = random.choice(P, p=prob, replace=False, size=2)
-
-        r = random.randint(0, nPoints)
-        child1Points = parent1.points[:r] + parent2.points[r:]
-        child2Points = parent2.points[:r] + parent1.points[r:]
-        PP    += [Solution(child1Points, constraints), Solution(child2Points, constraints)]
-        count += 1
-
-    return PP
-
 
 def mutation(P, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
@@ -316,7 +189,7 @@ def mutationFlipRandomN(P, constraints):
 
     for sol in P:
         # mutate with a prob of p
-        p = 0.25
+        p = 0.1
         if random.random() > p:
             PP += [sol]
             continue
@@ -324,6 +197,7 @@ def mutationFlipRandomN(P, constraints):
         newPoints = sol.points
 
         n = random.randint(0, int(nLines*nColumns/10))+1
+        n = 2
         # n = int(nLines*nColumns/4)
         # Add a point with a prob of pAdd
         for _ in range(n):
@@ -378,12 +252,14 @@ def mutationInLineN(P, constraints):
 
     for sol in P:
         # mutate with a prob of p
-        p = 0.25
+        p = 0.15
         if random.random() > p or len(sol.points) < 0:
             PP += [sol]
             continue
 
-        n = random.randint(1, int(/10))
+        n = random.randint(1, int(boardSize/10))
+        if random.random() <= 0.5:
+            n = 1
 
         newPoints = sol.points
         for _ in range(n):
@@ -420,34 +296,6 @@ def mutationInLineN(P, constraints):
 
     return PP
 
-
-def mutationFlip(P, constraints):
-    rules, nLines, nColumns, nPoints, nPopulation = constraints
-
-    PP = []
-
-    allPoints = [(i,j) for i in range(nLines) for j in range(nColumns)]
-
-    for sol in P:
-        # mutate with a prob of p
-        p = 0.15
-        if random.random() > p:
-            PP += [sol]
-            continue
-
-        # make n changes
-        maxN = int(nLines*nColumns/10)
-        n = random.randint(1, maxN)
-
-        random.shuffle(allPoints)
-
-        pointsToFlip = allPoints[:n]
-        newPoints = [p for p in pointsToFlip if p not in sol.points] + [p for p in sol.points if p not in pointsToFlip]
-
-        PP += [Solution(newPoints, constraints)]
-
-    return PP
-
 def mutationFlip1(P, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
 
@@ -476,46 +324,6 @@ def mutationFlip1(P, constraints):
     return PP
 
 
-def mutationProportional(P, constraints):
-    rules, nLines, nColumns, nPoints, nPopulation = constraints
-
-    PP = []
-
-    for sol in P:
-        # mutate with a prob of p
-        p = 0.25
-        if random.random() > p:
-            PP += [sol]
-            continue
-
-        # make n changes (max 5%)
-        maxN = int(nLines*nColumns/10)
-        n = random.randint(1, maxN)
-
-        newPoints = sol.points
-
-        for _ in range(n):
-
-            # Add a point with a prob of pAdd
-            if len(newPoints) <= nLines*nColumns:
-                pAdd = min(0.75, len(newPoints)/nPoints)
-
-                if random.random() < pAdd:
-                    newPoint = (random.randint(0,nLines), random.randint(0,nColumns))
-                    if newPoint not in sol.points:
-                        newPoints += [newPoint]
-
-            if(len(newPoints) > 0):
-                pRem = min(0.75, nPoints/len(newPoints))
-
-                if random.random() < pRem:
-                    # Remove a point with a prob of 1-pAdd
-                    newPoints.pop(0)
-
-        PP += [Solution(newPoints, constraints)]
-
-    return PP
-
 def select(P, PP, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
 
@@ -534,31 +342,13 @@ def selectBestChildren(P, PP, constraints):
 
     PP = sorted(PP, key = lambda s : (s.fitness, random.random()), reverse = True)
 
-    nChildren = int(2*nPopulation/3)+1
+    nChildren = int(2*nPopulation/4)+1
     nRandom = nPopulation - nChildren
 
     bestOnes = PP[:nChildren]
     others   = PP[nChildren:]
-    sizeOthers = len(others)
-    nOthers = (sizeOthers*(sizeOthers+1))/2
 
-    bestN = bestOnes + np.ndarray.tolist(random.choice(others, p=[i/nOthers for i in range(sizeOthers, 0, -1)], size=nRandom, replace=False))
-
-    return bestN
-
-
-def selectYinYang(P, PP, constraints):
-    rules, nLines, nColumns, nPoints, nPopulation = constraints
-
-    PP = sorted(PP, key = lambda s : (s.fitness, random.random()))
-
-    nChildren = int(3*nPopulation/4)+1
-    nRandom = nPopulation - nChildren
-
-    bestOnes  = PP[-nChildren:]
-    worstOnes = PP[:nRandom]
-
-    bestN = bestOnes + worstOnes
+    bestN = bestOnes + np.ndarray.tolist(random.choice(others, size=nRandom, replace=False))
 
     return bestN
 
@@ -566,8 +356,8 @@ def selectYinYang(P, PP, constraints):
 def selectBestOfAll(P, PP, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
 
-    nParents  = int(nPopulation/3)+1
-    nChildren = int(nPopulation/2)+1
+    nParents  = int(3*nPopulation/10)+1
+    nChildren = int(5*nPopulation/10)+1
     nChildren = nPopulation-nParents
     nRandom   = nPopulation - nParents - nChildren
     nRandom   = 0
@@ -602,9 +392,9 @@ def selectRandom(P, PP, constraints):
 def converge(P, constraints):
     rules, nLines, nColumns, nPoints, nPopulation = constraints
 
-    for s in P:
-        if s.fitness == 0:
-            return True
+    # for s in P:
+    #     if s.fitness == 0:
+    #         return True
 
     for i in range(len(P)-1):
         if P[i].points != P[i+1].points:
