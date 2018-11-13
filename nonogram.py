@@ -10,13 +10,11 @@ class Game:
                 aux += [False]
             self.board += [aux]
 
-        self.fill(points)
+        self.fill(points, nLines, nColumns)
 
-    def fill(self, points):
-        for p in points:
-            x = p[0]
-            y = p[1]
-            self.board[x][y] = True
+    def fill(self, points, nLines, nColumns):
+        for i, v in enumerate(points):
+            self.board[int(i/nColumns)][i%nColumns] = v
 
     def __str__(self):
         result = '=' * ((self.nColumns)*2+2) + '\n'
