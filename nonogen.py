@@ -14,7 +14,7 @@ class Solution:
 # i21303
 # i1118
 
-def main(puzzleName = 'i1118', nPopulation = 50):
+def main(puzzleName = 'i20902', nPopulation = 500):
     rules       = readRulesFile('puzzles/' + puzzleName + '.txt')
     constraints = createConstraints(rules, nPopulation)
     rules, nLines, nColumns, nPoints, nPopulation = constraints
