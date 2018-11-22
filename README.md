@@ -9,10 +9,10 @@ Genetic algorithm to solve nonogram puzzles
 
 ## How to use
 
-Set the parameters in the main function of "nonogen.py", and run with:
+Run with:
 
 ```shell
-python3 nonogen.py
+python3 nonogen.py _puzzle\_name_ _nPopulation_  _mutation\_prob_
 ```
 
 The puzzles are in the directory named "puzzles", the lines in the files are the rules of the puzzles, until the "-" character are the line rules and after the "-" are the column rules. 

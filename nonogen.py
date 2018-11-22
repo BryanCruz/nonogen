@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 from numpy import random
 from nonogram import Game, Rules, checkSolution
 from util     import readRulesFile, printSol, createConstraints, fitness as evaluateFitness
@@ -15,6 +16,11 @@ class Solution:
 # i1118
 
 def main(puzzleName = 'i20902', nPopulation = 500):
+    if len(sys.argv) > 1:
+        puzzleName = sys.argv[1]
+    if len(sys.argv) > 2:
+        nPopulation = int(sys.argv[2])
+    
     rules       = readRulesFile('puzzles/' + puzzleName + '.txt')
     constraints = createConstraints(rules, nPopulation)
     rules, nLines, nColumns, nPoints, nPopulation = constraints
@@ -90,7 +96,10 @@ def mutation(P, constraints):
     PP = []
 
     for s in P:
+
         prob = 0.4/100
+        if len(sys.argv) > 3:
+            prob = float(sys.argv[3])
 
         newPoints = []
 
